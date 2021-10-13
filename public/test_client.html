@@ -1,0 +1,76 @@
+<html>
+  <head>
+<script src="https://cdn.socket.io/3.1.3/socket.io.min.js"></script>
+<script>
+  
+  function sub() {
+    var token = document.getElementById("token_area").value;
+
+    if(token === '' || token === null || typeof(token) === 'undefined') {
+      return;
+    }
+    console.log("Creating connection");
+    var socket = io("https://core-websocket-service.herokuapp.com/", {
+      autoConnect: false,
+      transportOptions: {
+        polling: {
+          extraHeaders: {
+            BearerToken: `${token}`
+          }
+        }
+      }
+    });
+
+    
+    socket.on("connect", () => {
+      let filterFound = document.getElementById("notification_filter");
+      socket.emit('subscribe',filterFound.value);
+      console.log(`Socket Connected: ${socket.connected}`);
+      document.getElementById("btn_sub").disabled = true;
+      document.getElementById("btn_sub").innerText = "Subscribed";
+      // either with send()
+      //socket.emit('ping',"hello");
+
+      // or with emit() and custom event names
+      //socket.emit("salutations", "Hello!", { "mr": "john" }, Uint8Array.from([1, 2, 3, 4]));
+    });
+
+    // handle the event sent with socket.send()
+    socket.on("response", data => {
+      console.log("Socket response received");
+      console.log(data);
+      var tbody = document.getElementById("elem");
+      tbody.innerHTML += `<tr>`+JSON.stringify(data) +`</tr>`
+    });
+
+    console.log("Initiate socket connection");
+    socket.connect();
+  }
+
+
+</script>
+</head>
+<body>
+
+  <div style="text-align: -webkit-center;">
+    <textarea id="notification_filter" cols="50" placeholder="filter">gaming</textarea>
+    <br/><br/>
+    <textarea id="token_area"
+    cols="50"
+    rows="15" placeholder="token"></textarea>
+    <br/><br/>
+    <button id="btn_sub" onclick="sub()">Subscribe</button>
+    <br/><br/>
+    <table>
+      <thead>
+        <th> Notifications </th>
+      </thead>
+
+      <tbody id="elem">
+        
+      </tbody>
+    </table>
+</div>
+</body>
+
+</html>
